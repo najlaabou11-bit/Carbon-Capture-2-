@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ALGACEM Intelligence Platform — Ciments du Maroc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #1D9E75; --green-light: #E1F5EE; --green-mid: #5DCAA5; --green-dark: #085041;
+    --amber: #BA7517; --amber-light: #FAEEDA; --amber-mid: #EF9F27;
+    --blue: #185FA5; --blue-light: #E6F1FB; --blue-mid: #378ADD;
+    --red: #A32D2D; --red-light: #FCEBEB;
+    --gray-bg: #F5F4F0; --gray-card: #FFFFFF;
+    --gray-border: rgba(0,0,0,0.10);
+    --gray-text: #5F5E5A; --gray-muted: #888780;
+    --text-primary: #2C2C2A;
+    --font-display: 'Syne', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+    --font-body: 'Syne', sans-serif;
+    --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --gray-bg: #1a1a18; --gray-card: #242422;
+      --gray-border: rgba(255,255,255,0.09);
+      --gray-text: #9c9a92; --gray-muted: #6b6a64;
+      --text-primary: #e8e6de;
+    }
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--gray-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 20px 28px 40px;
+  }
+
+  #app { max-width: 100%; margin: 0 auto; }
+
+  /* TOP BAR */
+  .top-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px;
+    background: var(--gray-card);
+    border: 0.5px solid var(--gray-border);
+    border-radius: var(--radius-xl);
+    margin-bottom: 16px;
+    flex-wrap: wrap; gap: 10px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-dot {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-dot svg { width: 20px; height: 20px; }
+  .logo-name { font-family: var(--font-display); font-weight: 700; font-size: 15px; letter-spacing: 0.02em; }
+  .logo-sub { font-size: 11px; color: var(--gray-text); margin-top: 1px; }
+  .top-right { display: flex; align-items: center; gap: 16px; }
+  .status-pill { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--gray-text); }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; flex-shrink:0; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.55;transform:scale(1.2)} }
+  #clock { font-family: var(--font-mono); font-size: 11px; color: var(--gray-muted); }
+
+  /* TABS */
+  .tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .tab {
+    flex: 1; min-width: 120px; padding: 10px 8px; text-align: center;
+    font-size: 13px; font-weight: 500; font-family: var(--font-display);
+    border: 0.5px solid var(--gray-border); border-radius: var(--radius-md);
+    background: var(--gray-card); color: var(--gray-text);
+    cursor: pointer; transition: all .15s; white-space: nowrap;
+  }
+  .tab:hover { background: var(--gray-bg); }
+  .tab.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* GRIDS */
+  .grid-4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; margin-bottom: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-bottom: 14px; }
+  @media(max-width:700px) {
+    .grid-4 { grid-template-columns: repeat(2,1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: repeat(2,1fr); }
+  }
+  @media(max-width:420px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--gray-card); border: 0.5px solid var(--gray-border);
+    border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 14px;
+  }
+  .card-title {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.10em; color: var(--gray-muted); margin-bottom: 12px;
+  }
+
+  /* METRIC CARDS */
+  .metric-card {
+    background: var(--gray-bg); border: 0.5px solid var(--gray-border);
+    border-radius: var(--radius-md); padding: 14px;
+  }
+  .metric-label { font-size: 11px; color: var(--gray-text); margin-bottom: 5px; }
+  .metric-value { font-family: var(--font-mono); font-size: 24px; font-weight: 500; line-height: 1; }
+  .metric-unit { font-size: 11px; color: var(--gray-muted); margin-top: 4px; }
+  .metric-delta { font-size: 11px; margin-top: 5px; }
+  .delta-up { color: var(--green); }
+  .delta-warn { color: var(--amber); }
+
+  /* SENSOR ROWS */
+  .sensor-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 0; border-bottom: 0.5px solid var(--gray-border);
+  }
+  .sensor-row:last-child { border-bottom: none; }
+  .sensor-name { font-size: 13px; flex: 1.2; min-width: 110px; }
+  .sensor-val { font-family: var(--font-mono); font-size: 13px; font-weight: 500; flex: 0.9; text-align: right; }
+  .sensor-bar-wrap { flex: 2; background: var(--gray-bg); border-radius: 3px; height: 6px; overflow: hidden; }
+  .sensor-bar { height: 100%; border-radius: 3px; transition: width .8s ease; }
+  .sensor-status { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; white-space: nowrap; }
+  .status-ok { background: var(--green-light); color: var(--green-dark); }
+  .status-warn { background: var(--amber-light); color: var(--amber); }
+  .status-alert { background: var(--red-light); color: var(--red); }
+
+  /* RECOMMENDATION CARDS */
+  .rec-card {
+    border-left: 3px solid var(--green); padding: 10px 12px;
+    background: var(--gray-bg); border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    margin-bottom: 8px;
+  }
+  .rec-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .rec-body { font-size: 12px; color: var(--gray-text); line-height: 1.55; }
+  .rec-urgency {
+    font-size: 10px; font-weight: 600; padding: 2px 8px;
+    border-radius: 10px; display: inline-block; margin-top: 6px;
+  }
+
+  /* ALERT BARS */
+  .alert-bar {
+    padding: 9px 12px; border-radius: var(--radius-md);
+    font-size: 12px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .alert-info { background: var(--blue-light); color: var(--blue); border: 0.5px solid var(--blue-mid); }
+  .alert-warn { background: var(--amber-light); color: var(--amber); border: 0.5px solid var(--amber-mid); }
+
+  /* PROGRESS BARS */
+  .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .prog-label { font-size: 12px; flex: 1.5; color: var(--gray-text); }
+  .prog-bar-bg { flex: 3; height: 8px; background: var(--gray-bg); border-radius: 4px; overflow: hidden; }
+  .prog-bar { height: 100%; border-radius: 4px; transition: width 1s ease; }
+  .prog-val { font-family: var(--font-mono); font-size: 11px; width: 48px; text-align: right; }
+
+  /* CHARTS */
+  .chart-wrap { position: relative; width: 100%; }
+
+  /* SIMULATOR */
+  .slider-row { margin-bottom: 14px; }
+  .slider-row label {
+    display: flex; justify-content: space-between;
+    font-size: 12px; color: var(--gray-text); margin-bottom: 5px;
+  }
+  .slider-row label span:last-child {
+    font-family: var(--font-mono); font-weight: 500; color: var(--text-primary);
+  }
+  .slider-row input[type=range] {
+    width: 100%; accent-color: var(--green); cursor: pointer;
+  }
+  .scenario-output {
+    background: var(--gray-bg); border: 0.5px solid var(--gray-border);
+    border-radius: var(--radius-md); padding: 16px; margin-top: 12px;
+  }
+  .scen-section-title {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .08em; color: var(--gray-muted); margin-bottom: 12px;
+  }
+  .scen-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .scen-item-label { font-size: 11px; color: var(--gray-text); margin-bottom: 3px; }
+  .scen-item-val { font-family: var(--font-mono); font-size: 16px; font-weight: 500; }
+  .scen-highlight { color: var(--green); }
+  .scen-divider {
+    margin: 14px 0; border: none;
+    border-top: 0.5px solid var(--gray-border);
+  }
+
+  /* CO2 COUNTER */
+  .co2-counter { font-family: var(--font-mono); font-size: 28px; font-weight: 500; color: var(--green); }
+  .co2-label { font-size: 11px; color: var(--gray-text); margin-top: 4px; }
+
+  /* DATA TABLE */
+  table.data-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+  table.data-table th {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .06em;
+    color: var(--gray-muted); padding: 4px 8px;
+    border-bottom: 0.5px solid var(--gray-border); text-align: left; font-weight: 600;
+  }
+  table.data-table td { padding: 8px 8px; border-bottom: 0.5px solid var(--gray-border); }
+  table.data-table tr:last-child td { border-bottom: none; }
+
+  /* TABS CONTENT */
+  #tab-content > div { display: none; }
+  #tab-content > div.visible { display: block; }
+
+  /* FOOTER */
+  .footer {
+    text-align: center; font-size: 11px; color: var(--gray-muted);
+    margin-top: 24px; padding-top: 16px;
+    border-top: 0.5px solid var(--gray-border);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="logo-dot">
+        <svg viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="10" cy="10" r="7" stroke="white" stroke-width="1.8"/>
+          <path d="M10 6.5v4l2.5 1.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="10" cy="10" r="1.5" fill="white" opacity="0.5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">ALGACEM Intelligence Platform</div>
+        <div class="logo-sub">Ciments du Maroc · Safi Plant · Carbon Capture System</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="status-pill"><div class="pulse"></div> Live simulation</div>
+      <div id="clock">--:--:-- — Safi, MA</div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('overview')">Overview</div>
+    <div class="tab" onclick="switchTab('process')">Process Intelligence</div>
+    <div class="tab" onclick="switchTab('co2flux')">CO₂ Flux Monitor</div>
+    <div class="tab" onclick="switchTab('simulator')">Scale Simulator</div>
+    <div class="tab" onclick="switchTab('pond')">🌿 Pond Simulation</div>
+  </div>
+
+  <div id="tab-content">
+
+    <!-- ===== OVERVIEW ===== -->
+    <div id="tab-overview" class="visible">
+      <div class="grid-4">
+        <div class="metric-card">
+          <div class="metric-label">CO₂ captured today</div>
+          <div class="metric-value" id="co2-today">0.141</div>
+          <div class="metric-unit">tonnes CO₂</div>
+          <div class="metric-delta delta-up">↑ 3.2% vs yesterday</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Algae biomass yield</div>
+          <div class="metric-value" id="biomass-rate">68.4</div>
+          <div class="metric-unit">kg / day</div>
+          <div class="metric-delta delta-up">↑ in optimal range</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">CO₂ conversion ratio</div>
+          <div class="metric-value">2.03</div>
+          <div class="metric-unit">kg CO₂ / kg algae</div>
+          <div class="metric-delta delta-up">↑ target: 2.00</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Active pond area</div>
+          <div class="metric-value">0.5</div>
+          <div class="metric-unit">ha · of 4 ha planned</div>
+          <div class="metric-delta delta-warn">Phase 1 pilot</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Live sensor snapshot</div>
+          <div class="sensor-row">
+            <div class="sensor-name">pH level</div>
+            <div class="sensor-val" id="s-ph">8.12</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="bar-ph" style="width:62%;background:var(--green)"></div></div>
+            <div class="sensor-status status-ok" id="st-ph">Optimal</div>
+          </div>
+          <div class="sensor-row">
+            <div class="sensor-name">Temperature</div>
+            <div class="sensor-val" id="s-temp">26.3°C</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="bar-temp" style="width:55%;background:var(--green)"></div></div>
+            <div class="sensor-status status-ok" id="st-temp">Optimal</div>
+          </div>
+          <div class="sensor-row">
+            <div class="sensor-name">CO₂ injection rate</div>
+            <div class="sensor-val" id="s-co2">14.2 L/min</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="bar-co2" style="width:71%;background:var(--blue-mid)"></div></div>
+            <div class="sensor-status status-ok" id="st-co2">Active</div>
+          </div>
+          <div class="sensor-row">
+            <div class="sensor-name">Optical density (OD)</div>
+            <div class="sensor-val" id="s-od">0.74</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="bar-od" style="width:74%;background:var(--green)"></div></div>
+            <div class="sensor-status status-ok" id="st-od">Growing</div>
+          </div>
+          <div class="sensor-row">
+            <div class="sensor-name">Light intensity</div>
+            <div class="sensor-val" id="s-light">312 µmol/m²/s</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="bar-light" style="width:78%;background:var(--amber-mid)"></div></div>
+            <div class="sensor-status status-ok" id="st-light">Good</div>
+          </div>
+          <div class="sensor-row">
+            <div class="sensor-name">Dissolved O₂</div>
+            <div class="sensor-val" id="s-do">7.8 mg/L</div>
+            <div class="sensor-bar-wrap"><div class="sensor-bar" id="bar-do" style="width:65%;background:var(--green)"></div></div>
+            <div class="sensor-status status-ok" id="st-do">Normal</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">AI recommendations</div>
+          <div class="rec-card">
+            <div class="rec-title">Optimal harvest window approaching</div>
+            <div class="rec-body">Optical density trending toward 0.85 threshold. Estimated harvest readiness in 14–18 hours. Pre-schedule dewatering at 06:00 tomorrow for maximum dry weight yield.</div>
+            <div class="rec-urgency" style="background:var(--green-light);color:var(--green-dark)">Scheduled</div>
+          </div>
+          <div class="rec-card" style="border-color:var(--amber)">
+            <div class="rec-title">pH drift detected — minor</div>
+            <div class="rec-body">pH has risen to 8.12 over the last 3 hours. At current photosynthesis rate, may exceed 8.5 threshold by 22:00. Consider reducing CO₂ injection by 8% to rebalance.</div>
+            <div class="rec-urgency" style="background:var(--amber-light);color:var(--amber)">Monitor</div>
+          </div>
+          <div class="rec-card" style="border-color:var(--blue-mid)">
+            <div class="rec-title">CO₂ surplus window tonight</div>
+            <div class="rec-body">Kiln operating at 94% capacity tonight. Predicted CO₂ surplus of 2.3 t between 21:00–01:00. Recommend increasing injection rate by 12% if pond capacity allows.</div>
+            <div class="rec-urgency" style="background:var(--blue-light);color:var(--blue)">Opportunity</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">7-day performance — biomass yield (kg/day) vs CO₂ injected (kg/day)</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-overview"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== PROCESS INTELLIGENCE ===== -->
+    <div id="tab-process">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Growth model — optical density over 24h</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-growth"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">pH vs biomass productivity (scatter)</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-ph-corr"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Multi-sensor live feed — 24h rolling (simulated)</div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-sensors"></canvas></div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">Harvest optimization tracker</div>
+          <div style="margin-bottom:14px">
+            <div class="prog-row"><div class="prog-label">Biomass density</div><div class="prog-bar-bg"><div class="prog-bar" style="width:74%;background:var(--green)"></div></div><div class="prog-val">74%</div></div>
+            <div class="prog-row"><div class="prog-label">Protein content est.</div><div class="prog-bar-bg"><div class="prog-bar" style="width:58%;background:var(--green)"></div></div><div class="prog-val">58%</div></div>
+            <div class="prog-row"><div class="prog-label">Harvest readiness</div><div class="prog-bar-bg"><div class="prog-bar" style="width:67%;background:var(--amber-mid)"></div></div><div class="prog-val">67%</div></div>
+            <div class="prog-row"><div class="prog-label">Pond capacity used</div><div class="prog-bar-bg"><div class="prog-bar" style="width:43%;background:var(--blue-mid)"></div></div><div class="prog-val">43%</div></div>
+          </div>
+          <div class="alert-bar alert-info">Predicted optimal harvest: tomorrow 06:00–08:00</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Process anomaly log</div>
+          <table class="data-table">
+            <thead><tr><th>Time</th><th>Parameter</th><th>Event</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>08:14</td><td>pH</td><td>Rising trend (+0.3)</td><td>Monitoring</td></tr>
+              <tr><td>Yesterday 22:41</td><td>Temp</td><td>Drop to 19.8°C</td><td>Auto-adjusted</td></tr>
+              <tr><td>Yesterday 14:03</td><td>OD</td><td>Spike to 0.91</td><td>Harvest triggered</td></tr>
+              <tr><td>2 days ago 06:15</td><td>CO₂ flow</td><td>Pressure drop</td><td>Logged</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CO2 FLUX MONITOR ===== -->
+    <div id="tab-co2flux">
+      <div class="grid-3">
+        <div class="metric-card">
+          <div class="metric-label">Kiln CO₂ output rate</div>
+          <div class="metric-value" id="kiln-rate">68.5</div>
+          <div class="metric-unit">t CO₂ / hour</div>
+          <div class="metric-delta" style="color:var(--gray-text)">~600,000 t/year capacity</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Diverted to ponds</div>
+          <div class="metric-value" id="diverted">0.81</div>
+          <div class="metric-unit">% of kiln output</div>
+          <div class="metric-delta delta-up">↑ algae consuming</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">CO₂ offset YTD</div>
+          <div class="co2-counter" id="ytd-co2">38.4</div>
+          <div class="co2-label">tonnes CO₂ captured this year</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">24-hour CO₂ balance — kiln output vs algae capture (kg/hour)</div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chart-co2balance"></canvas></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">CO₂ fate breakdown — today</div>
+          <div class="chart-wrap" style="height:190px"><canvas id="chart-co2pie"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Monthly capture vs target (6 months)</div>
+          <div class="chart-wrap" style="height:150px"><canvas id="chart-monthly"></canvas></div>
+          <hr class="scen-divider"/>
+          <div class="prog-row">
+            <div class="prog-label">vs 4 ha scale target</div>
+            <div class="prog-bar-bg"><div class="prog-bar" style="width:12%;background:var(--amber-mid)"></div></div>
+            <div class="prog-val">12.5%</div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-muted);margin-top:4px">At full 4 ha: est. ~400 t CO₂/yr · 0.067% of kiln emissions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCALE SIMULATOR ===== -->
+    <div id="tab-simulator">
+      <div class="card">
+        <div class="card-title">ALGACEM expansion planner — scenario simulator</div>
+        <div style="font-size:12px;color:var(--gray-text);margin-bottom:18px;line-height:1.6">
+          Adjust parameters to model expansion scenarios. All calculations use real ALGACEM conversion ratios (2 kg CO₂ / 1 kg algae · 50 t algae / ha / year baseline).
+        </div>
+        <div class="grid-2">
+          <div>
+            <div class="slider-row">
+              <label><span>Pond area (hectares)</span><span id="lbl-area">4.0 ha</span></label>
+              <input type="range" min="0.5" max="50" step="0.5" value="4" oninput="updateSimulator()" id="sl-area">
+            </div>
+            <div class="slider-row">
+              <label><span>Yield efficiency (%)</span><span id="lbl-eff">100%</span></label>
+              <input type="range" min="50" max="150" step="5" value="100" oninput="updateSimulator()" id="sl-eff">
+            </div>
+            <div class="slider-row">
+              <label><span>Fish meal share (%)</span><span id="lbl-fish">100%</span></label>
+              <input type="range" min="0" max="100" step="10" value="100" oninput="updateSimulator()" id="sl-fish">
+            </div>
+          </div>
+          <div>
+            <div class="slider-row">
+              <label><span>Fish meal price (USD/t)</span><span id="lbl-fmp">$1,500</span></label>
+              <input type="range" min="1000" max="3000" step="100" value="1500" oninput="updateSimulator()" id="sl-fmp">
+            </div>
+            <div class="slider-row">
+              <label><span>Biofertilizer price (USD/t)</span><span id="lbl-bfp">$4,000</span></label>
+              <input type="range" min="2000" max="10000" step="500" value="4000" oninput="updateSimulator()" id="sl-bfp">
+            </div>
+            <div class="slider-row">
+              <label><span>Carbon credit (USD/tCO₂)</span><span id="lbl-ccp">$25</span></label>
+              <input type="range" min="5" max="100" step="5" value="25" oninput="updateSimulator()" id="sl-ccp">
+            </div>
+          </div>
+        </div>
+
+        <div class="scenario-output">
+          <div class="scen-section-title">Projected annual output</div>
+          <div class="scen-grid">
+            <div><div class="scen-item-label">Algae biomass</div><div class="scen-item-val" id="sc-algae">200 t</div></div>
+            <div><div class="scen-item-label">CO₂ captured</div><div class="scen-item-val" id="sc-co2">400 t</div></div>
+            <div><div class="scen-item-label">% of kiln emissions</div><div class="scen-item-val" id="sc-pct">0.0667%</div></div>
+            <div><div class="scen-item-label">Est. annual revenue</div><div class="scen-item-val" id="sc-rev">$300,000</div></div>
+            <div><div class="scen-item-label">Carbon credit income</div><div class="scen-item-val" id="sc-cc">$10,000</div></div>
+            <div><div class="scen-item-label">Total value created</div><div class="scen-item-val scen-highlight" id="sc-total">$310,000</div></div>
+          </div>
+          <hr class="scen-divider"/>
+          <div style="font-size:11px;color:var(--gray-text);margin-bottom:5px">Area needed to offset 1% of kiln emissions</div>
+          <div class="scen-item-val" id="sc-1pct">30 ha</div>
+          <div style="font-size:11px;color:var(--gray-muted);margin-top:4px" id="sc-1pct-note">~3,000 t CO₂ needed · 1,500 t algae/year required</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Revenue comparison — fish meal only vs mixed biofertilizer strategy (by area)</div>
+        <div class="chart-wrap" style="height:240px"><canvas id="chart-scenario"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ===== POND SIMULATION ===== -->
+    <div id="tab-pond">
+      <div class="card" style="padding:12px 16px 16px">
+        <div class="card-title">Live pond park simulation — ALGACEM Safi · isometric view</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--gray-text)">Time of day</span>
+            <input type="range" id="sl-time" min="0" max="24" step="0.1" value="10" style="width:90px;accent-color:var(--green)" oninput="pondCtrl()">
+            <span style="font-size:11px;font-family:var(--font-mono);min-width:36px" id="lbl-time">10:00</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--gray-text)">CO₂ flow</span>
+            <input type="range" id="sl-co2f" min="0" max="100" step="1" value="70" style="width:80px;accent-color:var(--green)" oninput="pondCtrl()">
+            <span style="font-size:11px;font-family:var(--font-mono);min-width:28px" id="lbl-co2f">70%</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--gray-text)">Paddle speed</span>
+            <input type="range" id="sl-spd" min="0" max="100" step="1" value="60" style="width:80px;accent-color:var(--green)" oninput="pondCtrl()">
+            <span style="font-size:11px;font-family:var(--font-mono);min-width:28px" id="lbl-spd">60%</span>
+          </div>
+          <button id="btn-pondplay" onclick="togglePond()" style="padding:5px 14px;font-size:12px;font-weight:500;border-radius:6px;border:0.5px solid var(--green);background:var(--green);color:#fff;cursor:pointer">⏸ Pause</button>
+          <button onclick="setPondView('iso')" id="btn-iso" style="padding:5px 12px;font-size:12px;border-radius:6px;border:0.5px solid var(--gray-border);background:var(--green);color:#fff;cursor:pointer">Isometric</button>
+          <button onclick="setPondView('top')" id="btn-top" style="padding:5px 12px;font-size:12px;border-radius:6px;border:0.5px solid var(--gray-border);background:var(--gray-card);color:var(--gray-text);cursor:pointer">Top view</button>
+        </div>
+        <canvas id="pond-canvas" style="width:100%;border-radius:8px;display:block"></canvas>
+        <div style="display:flex;gap:0;margin-top:10px;border:0.5px solid var(--gray-border);border-radius:8px;overflow:hidden">
+          <div style="flex:1;padding:8px 10px;background:var(--gray-bg);border-right:0.5px solid var(--gray-border)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-muted)">Active ponds</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--green);margin-top:2px">4 / 4</div>
+          </div>
+          <div style="flex:1;padding:8px 10px;background:var(--gray-bg);border-right:0.5px solid var(--gray-border)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-muted)">Avg OD</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;margin-top:2px" id="pst-od">0.74</div>
+          </div>
+          <div style="flex:1;padding:8px 10px;background:var(--gray-bg);border-right:0.5px solid var(--gray-border)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-muted)">CO₂ absorbed</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--green);margin-top:2px" id="pst-co2">6.2 kg/hr</div>
+          </div>
+          <div style="flex:1;padding:8px 10px;background:var(--gray-bg);border-right:0.5px solid var(--gray-border)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-muted)">Sunlight</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;margin-top:2px" id="pst-sun">312 µmol</div>
+          </div>
+          <div style="flex:1;padding:8px 10px;background:var(--gray-bg)">
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--gray-muted)">Est. daily yield</div>
+            <div style="font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--green);margin-top:2px" id="pst-yield">67 kg</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end tab-content -->
+
+  <div class="footer">
+    ALGACEM Intelligence Platform · Capstone project · Ciments du Maroc · Safi, Morocco<br/>
+    Simulation based on published ALGACEM R&D parameters — not connected to live plant sensors
+  </div>
+</div><!-- end app -->
+
+<script>
+// ─── HELPERS ───────────────────────────────────────────────
+function rand(base, noise) { return +(base + (Math.random()-0.5)*noise).toFixed(3); }
+function randInt(base, noise) { return Math.round(base + (Math.random()-0.5)*noise); }
+
+const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+const textColor  = isDark ? '#9c9a92' : '#5F5E5A';
+const gridColor  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
+const green   = '#1D9E75', greenL = '#5DCAA5';
+const amber   = '#BA7517', amberL = '#EF9F27';
+const blue    = '#185FA5', blueL  = '#378ADD';
+const red     = '#A32D2D';
+
+Chart.defaults.font.family = "'DM Mono', monospace";
+Chart.defaults.font.size   = 11;
+Chart.defaults.color       = textColor;
+
+function baseOpts(extra={}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { bodyFont: { family: "'DM Mono', monospace" } }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } },
+      y: { grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10 } } }
+    },
+    ...extra
+  };
+}
+
+const hours24 = Array.from({length:24}, (_,i) => i+':00');
+const days7   = ['Mon','Tue','Wed','Thu','Fri','Sat','Today'];
+const months6 = ['Oct','Nov','Dec','Jan','Feb','Mar'];
+
+// ─── OVERVIEW CHART ────────────────────────────────────────
+new Chart(document.getElementById('chart-overview'), {
+  type: 'bar',
+  data: {
+    labels: days7,
+    datasets: [
+      { label: 'Biomass yield (kg)', data: days7.map(() => rand(68,12)), backgroundColor: green+'bb', borderRadius: 3 },
+      { label: 'CO₂ injected (kg)',  data: days7.map(() => rand(138,20)), backgroundColor: blueL+'77', borderRadius: 3 }
+    ]
+  },
+  options: { ...baseOpts(), plugins: { legend: { display: true, labels: { color: textColor, font: { size: 10 }, boxWidth: 10, boxHeight: 10 } } } }
+});
+
+// ─── GROWTH CHART ──────────────────────────────────────────
+const odData = [0.42];
+for (let i = 1; i < 24; i++) odData.push(+(odData[i-1] + rand(0.014, 0.006)).toFixed(3));
+new Chart(document.getElementById('chart-growth'), {
+  type: 'line',
+  data: {
+    labels: hours24,
+    datasets: [
+      { data: odData, borderColor: green, backgroundColor: green+'22', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 },
+      { data: Array(24).fill(0.85), borderColor: red+'aa', borderDash: [5,4], borderWidth: 1.2, pointRadius: 0, fill: false }
+    ]
+  },
+  options: baseOpts()
+});
+
+// ─── PH SCATTER ────────────────────────────────────────────
+const phScatter = Array.from({length: 30}, () => ({ x: +(7.0 + Math.random()*2).toFixed(2), y: +(40 + Math.random()*35).toFixed(1) }));
+new Chart(document.getElementById('chart-ph-corr'), {
+  type: 'scatter',
+  data: { datasets: [{ data: phScatter, backgroundColor: greenL+'cc', pointRadius: 4 }] },
+  options: { ...baseOpts(), scales: {
+    x: { title: { display:true, text:'pH', color:textColor, font:{size:10} }, min:7.0, max:9.0, grid:{color:gridColor} },
+    y: { title: { display:true, text:'Productivity (mg/L/day)', color:textColor, font:{size:10} }, grid:{color:gridColor} }
+  }}
+});
+
+// ─── SENSORS LIVE FEED ─────────────────────────────────────
+new Chart(document.getElementById('chart-sensors'), {
+  type: 'line',
+  data: {
+    labels: hours24,
+    datasets: [
+      { label: 'pH',       data: hours24.map(() => rand(8.1, 0.4)), borderColor: green,  tension:0.4, pointRadius:0, borderWidth:1.5, yAxisID:'y'  },
+      { label: 'Temp (°C)',data: hours24.map(() => rand(26,  3  )), borderColor: amber,  tension:0.4, pointRadius:0, borderWidth:1.5, yAxisID:'y2' },
+      { label: 'OD×100',  data: hours24.map(() => rand(0.72,0.15)).map(v=>+(v*100).toFixed(1)), borderColor: blueL, tension:0.4, pointRadius:0, borderWidth:1.5, yAxisID:'y' }
+    ]
+  },
+  options: { ...baseOpts(),
+    plugins: { legend: { display:true, labels:{ color:textColor, font:{size:10}, boxWidth:10, boxHeight:10 } } },
+    scales: {
+      x:  { grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}} },
+      y:  { grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}}, position:'left'  },
+      y2: { grid:{drawOnChartArea:false}, ticks:{color:textColor,font:{size:10}}, position:'right' }
+    }
+  }
+});
+
+// ─── CO2 BALANCE ───────────────────────────────────────────
+new Chart(document.getElementById('chart-co2balance'), {
+  type: 'bar',
+  data: {
+    labels: hours24,
+    datasets: [
+      { label: 'Kiln output (kg/hr)',   data: hours24.map(() => rand(68500,4000)), backgroundColor: red+'55', borderRadius:2, yAxisID:'y'  },
+      { label: 'Algae capture (kg/hr)', data: hours24.map(() => rand(6.0,  1.5)),  backgroundColor: green+'cc', borderRadius:2, yAxisID:'y2' }
+    ]
+  },
+  options: { ...baseOpts(),
+    plugins: { legend:{ display:true, labels:{color:textColor,font:{size:10},boxWidth:10,boxHeight:10} } },
+    scales: {
+      x:  { grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}} },
+      y:  { grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}}, title:{display:true,text:'Kiln (kg/hr)',color:textColor,font:{size:10}} },
+      y2: { grid:{drawOnChartArea:false}, ticks:{color:textColor,font:{size:10}}, title:{display:true,text:'Capture (kg/hr)',color:textColor,font:{size:10}}, position:'right' }
+    }
+  }
+});
+
+// ─── CO2 PIE ───────────────────────────────────────────────
+new Chart(document.getElementById('chart-co2pie'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Emitted to atmosphere','Captured by algae','Lost (leakage)'],
+    datasets: [{ data:[99.12, 0.81, 0.07], backgroundColor:[red+'aa', green, amberL+'aa'], borderWidth:0 }]
+  },
+  options: { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:true, position:'bottom', labels:{color:textColor,font:{size:10},boxWidth:10,boxHeight:10} },
+              tooltip:{ callbacks:{ label: c => c.label+': '+c.raw+'%' } } }
+  }
+});
+
+// ─── MONTHLY CHART ─────────────────────────────────────────
+new Chart(document.getElementById('chart-monthly'), {
+  type: 'line',
+  data: {
+    labels: months6,
+    datasets: [
+      { label:'Actual capture (t)', data:[2.8,3.1,2.5,3.4,3.7,3.9], borderColor:green, backgroundColor:green+'22', fill:true, tension:0.4, pointRadius:3, borderWidth:2 },
+      { label:'Target (t)',         data:[3.5,3.5,3.5,3.5,3.5,3.5], borderColor:amberL, borderDash:[5,4], borderWidth:1.5, pointRadius:0, fill:false }
+    ]
+  },
+  options: { ...baseOpts(), plugins:{ legend:{ display:true, labels:{color:textColor,font:{size:10},boxWidth:10,boxHeight:10} } } }
+});
+
+// ─── SIMULATOR ─────────────────────────────────────────────
+let scenChart = null;
+function drawScenChart(fmp, bfp, ccp) {
+  if (scenChart) scenChart.destroy();
+  const areas = [0.5,1,2,4,10,20,50];
+  const base  = 50;
+  scenChart = new Chart(document.getElementById('chart-scenario'), {
+    type: 'bar',
+    data: {
+      labels: areas.map(a => a+' ha'),
+      datasets: [
+        { label:'Fish meal only ($)',    data: areas.map(a => Math.round(a*base*fmp/1000)*1000),                              backgroundColor: blueL+'88', borderRadius:3 },
+        { label:'Mixed strategy ($)',    data: areas.map(a => Math.round(a*base*(fmp*0.4+bfp*0.6)/1000)*1000),                backgroundColor: green+'aa', borderRadius:3 },
+        { label:'Carbon credits ($)',    data: areas.map(a => Math.round(a*base*2*ccp/1000)*1000),                            backgroundColor: amberL+'88', borderRadius:3 }
+      ]
+    },
+    options: { ...baseOpts(),
+      plugins:{ legend:{ display:true, labels:{color:textColor,font:{size:10},boxWidth:10,boxHeight:10} } },
+      scales:{
+        x:{ grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}} },
+        y:{ grid:{color:gridColor}, ticks:{color:textColor,font:{size:10}, callback: v => '$'+Math.round(v/1000)+'k' } }
+      }
+    }
+  });
+}
+
+function updateSimulator() {
+  const area   = +document.getElementById('sl-area').value;
+  const eff    = +document.getElementById('sl-eff').value / 100;
+  const fishPct= +document.getElementById('sl-fish').value / 100;
+  const fertPct= 1 - fishPct;
+  const fmp    = +document.getElementById('sl-fmp').value;
+  const bfp    = +document.getElementById('sl-bfp').value;
+  const ccp    = +document.getElementById('sl-ccp').value;
+
+  document.getElementById('lbl-area').textContent = area.toFixed(1)+' ha';
+  document.getElementById('lbl-eff').textContent  = Math.round(+document.getElementById('sl-eff').value)+'%';
+  document.getElementById('lbl-fish').textContent = Math.round(+document.getElementById('sl-fish').value)+'%';
+  document.getElementById('lbl-fmp').textContent  = '$'+fmp.toLocaleString();
+  document.getElementById('lbl-bfp').textContent  = '$'+bfp.toLocaleString();
+  document.getElementById('lbl-ccp').textContent  = '$'+ccp;
+
+  const algae  = Math.round(area * 50 * eff);
+  const co2Cap = algae * 2;
+  const pct    = ((co2Cap / 600000) * 100).toFixed(4);
+  const rev    = Math.round(algae * fishPct * fmp + algae * fertPct * bfp);
+  const ccRev  = Math.round(co2Cap * ccp);
+  const total  = rev + ccRev;
+  const haPer1pct = Math.round(3000 / (50 * eff));
+
+  document.getElementById('sc-algae').textContent   = algae.toLocaleString()+' t';
+  document.getElementById('sc-co2').textContent     = co2Cap.toLocaleString()+' t';
+  document.getElementById('sc-pct').textContent     = pct+'%';
+  document.getElementById('sc-rev').textContent     = '$'+rev.toLocaleString();
+  document.getElementById('sc-cc').textContent      = '$'+ccRev.toLocaleString();
+  document.getElementById('sc-total').textContent   = '$'+total.toLocaleString();
+  document.getElementById('sc-1pct').textContent    = haPer1pct+' ha';
+  document.getElementById('sc-1pct-note').textContent = '~3,000 t CO₂ needed · '+Math.round(1500/eff)+' t algae/year required';
+
+  drawScenChart(fmp, bfp, ccp);
+}
+
+updateSimulator();
+
+// ─── SENSOR LIVE UPDATE ────────────────────────────────────
+function updateSensors() {
+  const ph     = rand(8.1,  0.4);
+  const temp   = rand(26.2, 3);
+  const co2R   = rand(14.2, 2);
+  const od     = rand(0.74, 0.12);
+  const light  = randInt(312, 80);
+  const doVal  = rand(7.8, 1.2);
+
+  document.getElementById('s-ph').textContent    = ph.toFixed(2);
+  document.getElementById('s-temp').textContent  = temp.toFixed(1)+'°C';
+  document.getElementById('s-co2').textContent   = co2R.toFixed(1)+' L/min';
+  document.getElementById('s-od').textContent    = od.toFixed(2);
+  document.getElementById('s-light').textContent = light+' µmol/m²/s';
+  document.getElementById('s-do').textContent    = doVal.toFixed(1)+' mg/L';
+
+  const phPct    = Math.min(100, ((ph-7.0)/(9.5-7.0))*100);
+  const tempPct  = Math.min(100, ((temp-15)/(40-15))*100);
+  const co2Pct   = Math.min(100, (co2R/20)*100);
+  const odPct    = Math.min(100, (od/1.0)*100);
+  const lightPct = Math.min(100, (light/600)*100);
+  const doPct    = Math.min(100, (doVal/12)*100);
+
+  document.getElementById('bar-ph').style.width    = phPct.toFixed(0)+'%';
+  document.getElementById('bar-temp').style.width  = tempPct.toFixed(0)+'%';
+  document.getElementById('bar-co2').style.width   = co2Pct.toFixed(0)+'%';
+  document.getElementById('bar-od').style.width    = odPct.toFixed(0)+'%';
+  document.getElementById('bar-light').style.width = lightPct.toFixed(0)+'%';
+  document.getElementById('bar-do').style.width    = doPct.toFixed(0)+'%';
+
+  const phOk   = ph   >= 7.5 && ph   <= 8.5;
+  const tempOk = temp >= 20  && temp <= 30;
+  document.getElementById('st-ph').className   = 'sensor-status '+(phOk   ? 'status-ok' : ph > 8.5   ? 'status-warn' : 'status-alert');
+  document.getElementById('st-ph').textContent = phOk   ? 'Optimal' : ph > 8.5 ? 'High' : 'Low';
+  document.getElementById('st-temp').className   = 'sensor-status '+(tempOk ? 'status-ok' : 'status-warn');
+  document.getElementById('st-temp').textContent = tempOk ? 'Optimal' : temp > 30 ? 'High' : 'Low';
+
+  document.getElementById('co2-today').textContent = rand(0.141, 0.02).toFixed(3);
+  document.getElementById('kiln-rate').textContent = rand(68.5,  4).toFixed(1);
+  document.getElementById('diverted').textContent  = rand(0.81,  0.05).toFixed(2);
+}
+
+setInterval(updateSensors, 3000);
+
+// ─── CLOCK ─────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' — Safi, MA';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ─── POND SIMULATION ───────────────────────────────────────
+const pc = document.getElementById('pond-canvas');
+const px = pc.getContext('2d');
+let pW=0, pH2=0, pTick=0, pPlaying=true, pView='iso';
+let pTimeOfDay=10, pCO2Flow=0.7, pPaddleSpd=0.6;
+
+const pIsDark = isDark;
+const pT = {
+  ground:  pIsDark?'#22261a':'#c8c49a',
+  groundD: pIsDark?'#1a1e14':'#b8b488',
+  concrete:pIsDark?'#3c3c30':'#d8d4b4',
+  concreteD:pIsDark?'#2e2e24':'#c4c09a',
+  pipe:    '#cc4400',
+  kilnWall:pIsDark?'#5a4433':'#c4a070',
+  kilnDark:pIsDark?'#443322':'#b08858',
+  kilnTop: pIsDark?'#6a5444':'#d4b080',
+  text:    pIsDark?'#e0ddd4':'#2c2c2a',
+  textM:   pIsDark?'#888780':'#666',
+  shadow:  pIsDark?'rgba(0,0,0,0.45)':'rgba(0,0,0,0.15)',
+};
+
+const pPonds = [
+  {id:1,label:'Pond A',od:0.72,temp:26.1,ph:8.08,bubbles:[]},
+  {id:2,label:'Pond B',od:0.78,temp:25.8,ph:8.14,bubbles:[]},
+  {id:3,label:'Pond C',od:0.65,temp:26.5,ph:7.95,bubbles:[]},
+  {id:4,label:'Pond D',od:0.81,temp:26.0,ph:8.21,bubbles:[]},
+];
+pPonds.forEach(p=>{
+  for(let i=0;i<20;i++) p.bubbles.push({x:Math.random(),y:Math.random(),r:1+Math.random()*2,vy:0.005+Math.random()*0.005,vx:(Math.random()-.5)*0.003});
+});
+
+function pResizePond(){
+  pW = pc.offsetWidth||800;
+  pH2 = Math.round(pW*0.52);
+  pc.width  = pW * devicePixelRatio;
+  pc.height = pH2 * devicePixelRatio;
+  pc.style.height = pH2+'px';
+  px.scale(devicePixelRatio, devicePixelRatio);
+}
+pResizePond();
+window.addEventListener('resize', ()=>{pResizePond();});
+
+function pondCtrl(){
+  pTimeOfDay = +document.getElementById('sl-time').value;
+  const h=Math.floor(pTimeOfDay), m=Math.round((pTimeOfDay-h)*60);
+  document.getElementById('lbl-time').textContent = h+':'+(m<10?'0':'')+m;
+  pCO2Flow = document.getElementById('sl-co2f').value/100;
+  document.getElementById('lbl-co2f').textContent = document.getElementById('sl-co2f').value+'%';
+  pPaddleSpd = document.getElementById('sl-spd').value/100;
+  document.getElementById('lbl-spd').textContent = document.getElementById('sl-spd').value+'%';
+}
+
+function togglePond(){
+  pPlaying=!pPlaying;
+  const b=document.getElementById('btn-pondplay');
+  b.textContent=pPlaying?'⏸ Pause':'▶ Play';
+  b.style.background=pPlaying?'var(--green)':'var(--gray-card)';
+  b.style.color=pPlaying?'#fff':'var(--gray-text)';
+}
+
+function setPondView(v){
+  pView=v;
+  ['iso','top'].forEach(n=>{
+    const b=document.getElementById('btn-'+n);
+    if(b){ b.style.background=n===v?'var(--green)':'var(--gray-card)'; b.style.color=n===v?'#fff':'var(--gray-text)'; }
+  });
+}
+
+function pSunIntensity(){
+  if(pTimeOfDay<6||pTimeOfDay>20) return 0;
+  return Math.sin(((pTimeOfDay-6)/14)*Math.PI);
+}
+
+function pSkyColor(){
+  const s=pSunIntensity();
+  if(pIsDark){return `rgb(${Math.round(8+s*18)},${Math.round(18+s*28)},${Math.round(35+s*45)})`;}
+  return `rgb(${Math.round(135+s*65)},${Math.round(175+s*65)},${Math.round(205+s*45)})`;
+}
+
+function pAlgaeColor(od,sun){
+  const r=Math.round(8+od*12), g=Math.round(110+od*90+sun*45), b=Math.round(55+od*25);
+  return `rgba(${r},${g},${b},0.93)`;
+}
+
+// isometric projection
+function pIso(x,y,z){
+  const ix=(x-y)*0.72, iy=(x+y)*0.36-z*0.62;
+  return [pW/2+ix, pH2*0.36+iy];
+}
+
+// draw a top face (diamond) in iso
+function pTopFace(ox,oy,w,d,h){
+  const [ax,ay]=pIso(ox,oy,h);
+  const [bx,by]=pIso(ox+w,oy,h);
+  const [cx,cy]=pIso(ox+w,oy+d,h);
+  const [dx,dy]=pIso(ox,oy+d,h);
+  px.beginPath(); px.moveTo(ax,ay); px.lineTo(bx,by); px.lineTo(cx,cy); px.lineTo(dx,dy); px.closePath();
+}
+
+// left side face
+function pLeftFace(ox,oy,d,h){
+  const [ax,ay]=pIso(ox,oy,0);
+  const [bx,by]=pIso(ox,oy+d,0);
+  const [cx,cy]=pIso(ox,oy+d,h);
+  const [dx,dy]=pIso(ox,oy,h);
+  px.beginPath(); px.moveTo(ax,ay); px.lineTo(bx,by); px.lineTo(cx,cy); px.lineTo(dx,dy); px.closePath();
+}
+
+// front face
+function pFrontFace(ox,oy,w,h){
+  const [ax,ay]=pIso(ox,oy,0);
+  const [bx,by]=pIso(ox+w,oy,0);
+  const [cx,cy]=pIso(ox+w,oy,h);
+  const [dx,dy]=pIso(ox,oy,h);
+  px.beginPath(); px.moveTo(ax,ay); px.lineTo(bx,by); px.lineTo(cx,cy); px.lineTo(dx,dy); px.closePath();
+}
+
+function pDrawColumn(ox,oy,w,d,h,colorTop,colorLeft,colorFront){
+  pTopFace(ox,oy,w,d,h); px.fillStyle=colorTop; px.fill();
+  pLeftFace(ox,oy,d,h); px.fillStyle=colorLeft; px.fill();
+  pFrontFace(ox,oy+d,w,h); px.fillStyle=colorFront; px.fill();
+}
+
+function pDrawIsoLine(x1,y1,z1,x2,y2,z2){
+  const [ax,ay]=pIso(x1,y1,z1), [bx,by]=pIso(x2,y2,z2);
+  px.beginPath(); px.moveTo(ax,ay); px.lineTo(bx,by); px.stroke();
+}
+
+function pDrawGround(){
+  px.fillStyle=pT.ground;
+  const corners=[[-6,-4],[20,-4],[20,18],[-6,18]];
+  px.beginPath();
+  corners.forEach((c,i)=>{const [ix,iy]=pIso(c[0],c[1],0); i===0?px.moveTo(ix,iy):px.lineTo(ix,iy);});
+  px.closePath(); px.fill();
+}
+
+function pDrawSun(sun){
+  if(sun<0.05) return;
+  const sx=pW*0.76+Math.cos((pTimeOfDay/24)*Math.PI*2-1)*pW*0.12;
+  const sy=pH2*0.07-sun*pH2*0.05;
+  const sg=px.createRadialGradient(sx,sy,2,sx,sy,20);
+  sg.addColorStop(0,'rgba(255,228,70,0.95)'); sg.addColorStop(1,'rgba(255,200,40,0)');
+  px.beginPath(); px.arc(sx,sy,20,0,Math.PI*2); px.fillStyle=sg; px.fill();
+}
+
+function pDrawCementPlant(){
+  // main building body
+  pDrawColumn(13.5,-1.5, 3.5,3.0, 2.8, pT.kilnTop, pT.kilnWall, pT.kilnDark);
+  // chimney stack
+  pDrawColumn(14.3,-0.7, 0.7,0.7, 5.5, pT.kilnTop, pT.kilnWall, pT.kilnDark);
+  // silo
+  pDrawColumn(15.8,-0.5, 0.9,0.9, 4.0, pT.kilnTop, pT.kilnWall, pT.kilnDark);
+  // label
+  const [lx,ly]=pIso(15.0,-2.0,3.2);
+  px.fillStyle=pT.text; px.font='bold 10px Syne,sans-serif'; px.textAlign='center';
+  px.fillText('Safi Cement Plant', lx, ly);
+  const [lx2,ly2]=pIso(15.0,-2.0,2.5);
+  px.fillStyle=pT.textM; px.font='9px Syne,sans-serif';
+  px.fillText('CO₂ source · Kiln', lx2, ly2);
+}
+
+function pDrawSmoke(sun){
+  const [cx,cy]=pIso(14.65,-0.35,5.5);
+  for(let i=0;i<10;i++){
+    const t2=(pTick*0.007+i*0.25)%1;
+    const sx2=cx+Math.sin(t2*5+i)*10+i*1.5;
+    const sy2=cy-t2*55;
+    const r=5+t2*20;
+    px.beginPath(); px.arc(sx2,sy2,r,0,Math.PI*2);
+    px.fillStyle=`rgba(${pIsDark?'160,130,70':'100,85,60'},${0.16*(1-t2)})`; px.fill();
+  }
+}
+
+function pDrawCO2Pipe(){
+  px.strokeStyle=pT.pipe; px.lineWidth=3; px.setLineDash([7,5]);
+  px.lineDashOffset=-(pTick*pPaddleSpd*0.6)%12;
+  // horizontal pipe at height 1.8 from plant to pond area
+  const segs=[[14.2,0.5,1.8],[8.5,0.5,1.8],[8.5,0.5,0.3]];
+  px.beginPath();
+  segs.forEach((s,i)=>{const [ix,iy]=pIso(s[0],s[1],s[2]); i===0?px.moveTo(ix,iy):px.lineTo(ix,iy);});
+  px.stroke();
+  px.setLineDash([]);
+  // label
+  const [mlx,mly]=pIso(11.5,0.0,2.2);
+  px.fillStyle=pT.pipe; px.font='9px Syne,sans-serif'; px.textAlign='center';
+  px.fillText('CO₂ feed pipeline', mlx, mly);
+}
+
+function pDrawRaceway(p, ox, oy, w, d, sun, t){
+  const flow=pPaddleSpd*(pPlaying?1:0);
+  const wallH=0.5;
+  const algColor=pAlgaeColor(p.od,sun);
+
+  // shadow
+  pTopFace(ox+0.12,oy+0.18,w,d,0); px.fillStyle=pT.shadow; px.fill();
+
+  // concrete outer walls — left, front
+  pLeftFace(ox,oy,d,wallH); px.fillStyle=pT.concreteD; px.fill(); px.strokeStyle=pT.concreteD; px.lineWidth=0.5; px.stroke();
+  pFrontFace(ox,oy+d,w,wallH); px.fillStyle=pT.concrete; px.fill(); px.strokeStyle=pT.concrete; px.lineWidth=0.5; px.stroke();
+
+  // back wall
+  pLeftFace(ox+w,oy,d,wallH); px.fillStyle=pT.concreteD; px.fill();
+  pTopFace(ox,oy,w,d,wallH); px.fillStyle=pT.concrete; px.fill(); // top rim
+
+  // water fill (top face at wallH)
+  pTopFace(ox+0.12,oy+0.12,w-0.24,d-0.24,wallH-0.05);
+  px.fillStyle=algColor; px.fill();
+
+  // center island
+  const iox=ox+w*0.26, ioy=oy+d*0.18, iw=w*0.48, id=d*0.64, ih=wallH+0.08;
+  pTopFace(iox,ioy,iw,id,ih); px.fillStyle=pT.concreteD; px.fill();
+  pLeftFace(iox,ioy,id,0.12); px.fillStyle=pT.concreteD; px.fill();
+  pFrontFace(iox,ioy+id,iw,0.12); px.fillStyle=pT.concrete; px.fill();
+
+  // flow ripples (animated dashes on water surface)
+  const woff=(t*flow*0.035)%1;
+  px.strokeStyle='rgba(255,255,255,0.22)'; px.lineWidth=1; px.setLineDash([4,7]);
+  px.lineDashOffset=-woff*11;
+  pDrawIsoLine(ox+w*0.08,oy+d*0.08,wallH,ox+w*0.9,oy+d*0.08,wallH);
+  px.lineDashOffset=-(woff*11+5.5);
+  pDrawIsoLine(ox+w*0.9,oy+d*0.88,wallH,ox+w*0.08,oy+d*0.88,wallH);
+  px.setLineDash([]);
+
+  // paddle wheel
+  const pwx=ox+w*0.1, pwy=oy+d*0.5;
+  const [pcx2,pcy2]=pIso(pwx,pwy,wallH+0.15);
+  px.save(); px.translate(pcx2,pcy2);
+  const ang=t*flow*0.09;
+  px.strokeStyle='rgba(255,255,255,0.85)'; px.lineWidth=2.5;
+  for(let i=0;i<4;i++){
+    const a=ang+i*Math.PI/2;
+    px.beginPath(); px.moveTo(0,0); px.lineTo(Math.cos(a)*10,Math.sin(a)*6); px.stroke();
+  }
+  px.beginPath(); px.arc(0,0,3.5,0,Math.PI*2); px.fillStyle='#fff'; px.fill();
+  px.restore();
+
+  // CO2 bubbles
+  const bCount=Math.floor(pCO2Flow*14);
+  p.bubbles.slice(0,bCount).forEach(b=>{
+    const bx2=ox+w*0.1+b.x*(w*0.72);
+    const by2=oy+d*0.1+b.y*(d*0.72);
+    const onI=bx2>iox&&bx2<iox+iw&&by2>ioy&&by2<ioy+id;
+    if(!onI){
+      const [bbx,bby]=pIso(bx2,by2,wallH+b.r*0.04);
+      px.beginPath(); px.arc(bbx,bby,b.r*0.85,0,Math.PI*2);
+      px.fillStyle=pIsDark?'rgba(120,255,190,0.22)':'rgba(60,180,120,0.28)'; px.fill();
+    }
+  });
+
+  // pond label
+  const [lx,ly]=pIso(ox+w/2,oy+d+0.4,0);
+  px.fillStyle=pT.text; px.font='bold 10px Syne,sans-serif'; px.textAlign='center';
+  px.fillText(p.label, lx, ly);
+  const [lx2,ly2]=pIso(ox+w/2,oy+d+0.4,-0.55);
+  px.fillStyle=pT.textM; px.font='9px DM Mono,monospace';
+  px.fillText('OD '+p.od.toFixed(2)+' · '+p.temp.toFixed(1)+'°C', lx2, ly2+12);
+}
+
+function pDrawTopView(){
+  px.fillStyle=pIsDark?'#1a1e14':'#c8c49a';
+  px.fillRect(0,0,pW,pH2);
+  // title
+  px.fillStyle=pT.text; px.font='bold 12px Syne,sans-serif'; px.textAlign='left';
+  px.fillText('ALGACEM Pond Park — Top View', 14,18);
+  px.fillStyle=pT.textM; px.font='10px Syne,sans-serif';
+  px.fillText('Safi, Morocco · 0.5 ha · 4 open raceway ponds', 14,32);
+
+  const sun=pSunIntensity();
+  const cols=2, pw2=pW*0.36, ph3=pH2*0.36;
+  const gx=pW*0.04, gy=pH2*0.12, gapX=pW*0.04, gapY=pH2*0.06;
+
+  pPonds.forEach((p,i)=>{
+    const col=i%cols, row=Math.floor(i/cols);
+    const ppx2=gx+col*(pw2+gapX), ppy=gy+row*(ph3+gapY);
+    // shadow
+    px.fillStyle=pT.shadow; px.fillRect(ppx2+4,ppy+4,pw2,ph3);
+    // pond surround
+    px.fillStyle=pT.concrete;
+    px.beginPath(); px.roundRect(ppx2,ppy,pw2,ph3,8); px.fill();
+    // water
+    const wall=12;
+    px.fillStyle=pAlgaeColor(p.od,sun);
+    px.fillRect(ppx2+wall,ppy+wall,pw2-wall*2,ph3-wall*2);
+    // island
+    px.fillStyle=pT.concreteD;
+    px.beginPath(); px.roundRect(ppx2+pw2*0.25,ppy+ph3*0.22,pw2*0.5,ph3*0.56,4); px.fill();
+    // flow arrows
+    const woff=(pTick*pPaddleSpd*0.035)%1;
+    px.strokeStyle='rgba(255,255,255,0.3)'; px.lineWidth=1.5; px.setLineDash([5,7]);
+    px.lineDashOffset=-woff*12;
+    px.beginPath(); px.moveTo(ppx2+pw2*0.2,ppy+wall+7); px.lineTo(ppx2+pw2*0.8,ppy+wall+7); px.stroke();
+    px.lineDashOffset=-(woff*12+6);
+    px.beginPath(); px.moveTo(ppx2+pw2*0.8,ppy+ph3-wall-7); px.lineTo(ppx2+pw2*0.2,ppy+ph3-wall-7); px.stroke();
+    px.setLineDash([]);
+    // paddle wheel
+    const wcx=ppx2+wall+14, wcy=ppy+ph3/2;
+    px.save(); px.translate(wcx,wcy); px.rotate(pTick*pPaddleSpd*0.07);
+    px.strokeStyle='#fff'; px.lineWidth=2;
+    for(let k=0;k<4;k++){px.rotate(Math.PI/2); px.beginPath(); px.moveTo(0,0); px.lineTo(0,9); px.stroke();}
+    px.restore();
+    // CO2 bubbles top view
+    p.bubbles.slice(0,Math.floor(pCO2Flow*10)).forEach(b=>{
+      const bx3=ppx2+wall+b.x*(pw2-wall*2);
+      const by3=ppy+wall+b.y*(ph3-wall*2);
+      const onI=bx3>ppx2+pw2*0.25&&bx3<ppx2+pw2*0.75&&by3>ppy+ph3*0.22&&by3<ppy+ph3*0.78;
+      if(!onI){px.beginPath();px.arc(bx3,by3,b.r,0,Math.PI*2);px.fillStyle=pIsDark?'rgba(120,255,190,0.25)':'rgba(60,180,120,0.3)';px.fill();}
+    });
+    // label
+    px.fillStyle=pT.text; px.font='bold 11px Syne,sans-serif'; px.textAlign='center';
+    px.fillText(p.label, ppx2+pw2/2, ppy+ph3+15);
+    px.fillStyle=pT.textM; px.font='10px DM Mono,monospace';
+    px.fillText('OD '+p.od.toFixed(2)+' · '+p.temp.toFixed(1)+'°C · pH '+p.ph.toFixed(2), ppx2+pw2/2, ppy+ph3+27);
+  });
+
+  // cement plant box top-right
+  px.fillStyle=pT.kilnWall;
+  px.beginPath(); px.roundRect(pW-150,10,130,55,6); px.fill();
+  px.fillStyle=pT.text; px.font='bold 10px Syne,sans-serif'; px.textAlign='center';
+  px.fillText('Safi Cement Plant', pW-85,30);
+  px.fillStyle=pT.textM; px.font='9px Syne,sans-serif';
+  px.fillText('Kiln CO₂ source', pW-85,44);
+  // CO2 pipe
+  px.strokeStyle=pT.pipe; px.lineWidth=3; px.setLineDash([7,5]);
+  px.lineDashOffset=-(pTick*pPaddleSpd*0.5)%12;
+  px.beginPath(); px.moveTo(pW-150,37); px.lineTo(pW*0.42,37); px.stroke();
+  px.setLineDash([]);
+  px.fillStyle=pT.pipe; px.font='9px Syne,sans-serif'; px.textAlign='center';
+  px.fillText('CO₂ feed pipeline', pW*0.68,30);
+}
+
+function pDrawIsoView(){
+  // sky
+  px.fillStyle=pSkyColor(); px.fillRect(0,0,pW,pH2);
+  pDrawSun(pSunIntensity());
+  pDrawGround();
+  pDrawCementPlant();
+  pDrawCO2Pipe();
+
+  // 4 ponds in 2×2 iso layout
+  const layout=[{x:0.3,y:0.8},{x:6.8,y:0.8},{x:0.3,y:7.2},{x:6.8,y:7.2}];
+  const pw3=5.5, pd=4.8;
+  pPonds.forEach((p,i)=>{ pDrawRaceway(p,layout[i].x,layout[i].y,pw3,pd,pSunIntensity(),pTick); });
+
+  pDrawSmoke(pSunIntensity());
+
+  // title
+  px.fillStyle=pT.text; px.font='bold 12px Syne,sans-serif'; px.textAlign='left';
+  px.fillText('ALGACEM Microalgae Pond Park — Safi, Morocco', 12,18);
+  px.fillStyle=pT.textM; px.font='10px Syne,sans-serif';
+  px.fillText('Isometric view · 0.5 ha · 4 open raceway ponds', 12,32);
+}
+
+function pUpdateBubbles(){
+  pPonds.forEach(p=>{
+    p.bubbles.forEach(b=>{
+      b.y -= b.vy; b.x += b.vx;
+      if(b.y<0){b.y=1; b.x=Math.random();}
+      if(b.x<0||b.x>1){b.vx*=-1;}
+    });
+  });
+}
+
+function pUpdateStats(){
+  const sun=pSunIntensity();
+  const avgOD=(pPonds.reduce((s,p)=>s+p.od,0)/pPonds.length).toFixed(2);
+  const co2abs=(pCO2Flow*8.8).toFixed(1);
+  const sunMu=Math.round(sun*480+30);
+  const yield2=Math.round(pCO2Flow*sun*0.5*95+20);
+  document.getElementById('pst-od').textContent=avgOD;
+  document.getElementById('pst-co2').textContent=co2abs+' kg/hr';
+  document.getElementById('pst-sun').textContent=sunMu+' µmol';
+  document.getElementById('pst-yield').textContent=yield2+' kg';
+}
+
+let pAnimFrame=null;
+function pLoop(){
+  if(pPlaying) pTick++;
+  if(pPlaying) pUpdateBubbles();
+  px.clearRect(0,0,pW,pH2);
+  if(pView==='iso') pDrawIsoView();
+  else pDrawTopView();
+  pUpdateStats();
+  pAnimFrame=requestAnimationFrame(pLoop);
+}
+pLoop();
+
+// ─── TAB SWITCHING ─────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('#tab-content > div').forEach(d => d.classList.remove('visible'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('visible');
+  const tabNames = ['overview','process','co2flux','simulator','pond'];
+  document.querySelectorAll('.tab')[tabNames.indexOf(name)].classList.add('active');
+  if(name==='pond'){ setTimeout(()=>{pResizePond();},50); }
+}
+</script>
+</body>
+</html>
